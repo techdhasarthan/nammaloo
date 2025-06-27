@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "593526655726",
+    "project_id": "nammalo",
+    "storage_bucket": "nammalo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:593526655726:android:a07368e63e59680453c1ff",
+        "android_client_info": {
+          "package_name": "com.example.nearby_toilet_finder"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "593526655726-1446qu6u1uv1ks08ev4rcvsoq437ca8e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nearby_toilet_finder",
+            "certificate_hash": "163a7725ef2b6b4080adc80a9c3b8c05be30b2f9"
+          }
+        },
+        {
+          "client_id": "593526655726-9f1hendteqjqns4ma90lr4ea6v5msuhs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nearby_toilet_finder",
+            "certificate_hash": "dd7f243e467a314e2086f8ae9ab8be3795dd6265"
+          }
+        },
+        {
+          "client_id": "593526655726-slhrht8no4uje5ros9l3cclutuek8at8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnvrv3zgIKRxD48kturuHJH8L-99wnL8o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "593526655726-b3eqjs4ardlfok2runra6cvg94ug45n1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
