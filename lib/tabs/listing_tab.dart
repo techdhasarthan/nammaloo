@@ -232,315 +232,298 @@ class _ListingTabState extends State<ListingTab> {
     return RefreshIndicator(
       onRefresh: () async {
         await _detectLocation();
-        // Optionally, re-apply filters or reload data here
         _applyFilters();
       },
-      child: SingleChildScrollView(
+      child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Location Display Section
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: GestureDetector(
-                onTap: () async {
-                  final result = await showModalBottomSheet<String>(
-                    context: context,
-                    builder: (_) => Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.my_location),
-                          title: const Text('Use current location'),
-                          onTap: () => Navigator.pop(context, 'gps'),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.edit_location),
-                          title: const Text('Enter location manually'),
-                          onTap: () => Navigator.pop(context, 'manual'),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (result == 'gps') {
-                    await _detectLocation();
-                  } else if (result == 'manual') {
-                    await _enterManualLocation();
-                  }
-                },
-
-                onLongPress: _enterManualLocation,
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _currentAddress,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+        children: [
+          // Location Display
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: GestureDetector(
+              onTap: () async {
+                final result = await showModalBottomSheet<String>(
+                  context: context,
+                  builder: (_) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.my_location),
+                        title: const Text('Use current location'),
+                        onTap: () => Navigator.pop(context, 'gps'),
                       ),
-                    ),
-                    const Icon(
-                      Icons.edit_location_alt,
-                      size: 16,
-                      color: Colors.grey,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search),
-                  hintText: 'Search toilets...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                      ListTile(
+                        leading: const Icon(Icons.edit_location),
+                        title: const Text('Enter location manually'),
+                        onTap: () => Navigator.pop(context, 'manual'),
+                      ),
+                    ],
                   ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                  _applyFilters();
-                },
-              ),
-            ),
+                );
 
-            // Scrollable Filter Chips
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: ['Free', 'Paid', 'Accessible'].map((filter) {
-                    final isSelected = _filters.contains(filter);
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(filter),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              _filters.add(filter);
-                            } else {
-                              _filters.remove(filter);
-                            }
-                          });
-                          _applyFilters();
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
-
-            // Sort and Reset
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+                if (result == 'gps') {
+                  await _detectLocation();
+                } else if (result == 'manual') {
+                  await _enterManualLocation();
+                }
+              },
+              onLongPress: _enterManualLocation,
               child: Row(
                 children: [
-                  DropdownButton<String>(
-                    value: _selectedSort,
-                    items: sortOptions
-                        .map(
-                          (opt) => DropdownMenuItem(
-                            value: opt,
-                            child: Text(
-                              'Sort by ${opt[0].toUpperCase()}${opt.substring(1)}',
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedSort = value!;
-                      });
-                      _applyFilters();
-                    },
+                  const Icon(Icons.location_on, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _currentAddress,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: _resetFilters,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Reset'),
+                  const Icon(
+                    Icons.edit_location_alt,
+                    size: 16,
+                    color: Colors.grey,
                   ),
                 ],
               ),
             ),
+          ),
 
-            // Scrollable Quick Actions
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildQuickAction(
-                      context,
-                      icon: Icons.navigation,
-                      label: 'Near Me',
-                      color: Colors.blue,
-                      page: const NearMePage(),
-                    ),
-                    _buildQuickAction(
-                      context,
-                      icon: Icons.access_time,
-                      label: 'Open Now',
-                      color: Colors.green,
-                      page: const OpenNowPage(),
-                    ),
-                    _buildQuickAction(
-                      context,
-                      icon: Icons.star,
-                      label: 'Top Rated',
-                      color: Colors.amber,
-                      page: const TopRatedPage(),
-                    ),
-                  ],
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: 'Search toilets...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+                _applyFilters();
+              },
             ),
+          ),
 
-            // Card List
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: _filteredToilets.isEmpty
-                    ? [const Center(child: Text('No toilets found.'))]
-                    : _filteredToilets.map((toilet) {
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ToiletDetailPage(toilet: toilet),
-                              ),
-                            );
-                          },
-                          child: Card(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(12),
-                                  ),
-                                  child: Image.network(
-                                    toilet['image_url'] ?? '',
-                                    width: double.infinity,
-                                    height: 160,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Container(
-                                              height: 160,
-                                              color: Colors.grey[300],
-                                              child: const Center(
-                                                child: Icon(
-                                                  Icons.broken_image,
-                                                  size: 40,
-                                                ),
-                                              ),
-                                            ),
-                                  ),
+          // Filter chips
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: ['Free', 'Paid', 'Accessible'].map((filter) {
+                  final isSelected = _filters.contains(filter);
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(filter),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _filters.add(filter);
+                          } else {
+                            _filters.remove(filter);
+                          }
+                        });
+                        _applyFilters();
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+
+          // Sort and Reset
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                DropdownButton<String>(
+                  value: _selectedSort,
+                  items: sortOptions
+                      .map(
+                        (opt) => DropdownMenuItem(
+                          value: opt,
+                          child: Text(
+                            'Sort by ${opt[0].toUpperCase()}${opt.substring(1)}',
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedSort = value!;
+                    });
+                    _applyFilters();
+                  },
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _resetFilters,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Reset'),
+                ),
+              ],
+            ),
+          ),
+
+          // Quick Actions
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildQuickAction(
+                    context,
+                    icon: Icons.navigation,
+                    label: 'Near Me',
+                    color: Colors.blue,
+                    page: const NearMePage(),
+                  ),
+                  _buildQuickAction(
+                    context,
+                    icon: Icons.access_time,
+                    label: 'Open Now',
+                    color: Colors.green,
+                    page: const OpenNowPage(),
+                  ),
+                  _buildQuickAction(
+                    context,
+                    icon: Icons.star,
+                    label: 'Top Rated',
+                    color: Colors.amber,
+                    page: const TopRatedPage(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Toilet cards or empty message
+          if (_filteredToilets.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Text('No toilets found.'),
+              ),
+            )
+          else
+            ..._filteredToilets.map(
+              (toilet) => GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ToiletDetailPage(toilet: toilet),
+                    ),
+                  );
+                },
+                child: Card(
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12),
+                        ),
+                        child: Image.network(
+                          toilet['image_url'] ?? '',
+                          width: double.infinity,
+                          height: 160,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                height: 160,
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Icon(Icons.broken_image, size: 40),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        toilet['name'] ?? 'Unknown',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        toilet['address'] ?? 'No address',
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.star,
-                                            size: 16,
-                                            color: Colors.amber,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${toilet['rating'] ?? 0} (${toilet['reviews'] ?? 0} reviews)',
-                                          ),
-                                          const Spacer(),
-                                          Icon(
-                                            Icons.circle,
-                                            size: 10,
-                                            color: toilet['status'] == 'open'
-                                                ? Colors.green
-                                                : Colors.red,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            toilet['status']
-                                                    ?.toString()
-                                                    .toUpperCase() ??
-                                                'UNKNOWN',
-                                            style: TextStyle(
-                                              color: toilet['status'] == 'open'
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.location_on,
-                                            size: 14,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(toilet['distance'] ?? 'Unknown'),
-                                        ],
-                                      ),
-                                    ],
+                              ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              toilet['name'] ?? 'Unknown',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              toilet['address'] ?? 'No address',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  size: 16,
+                                  color: Colors.amber,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${toilet['rating']} (${toilet['reviews']} reviews)',
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  Icons.circle,
+                                  size: 10,
+                                  color: toilet['status'] == 'open'
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  toilet['status']?.toString().toUpperCase() ??
+                                      'UNKNOWN',
+                                  style: TextStyle(
+                                    color: toilet['status'] == 'open'
+                                        ? Colors.green
+                                        : Colors.red,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        );
-                      }).toList(),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on, size: 14),
+                                const SizedBox(width: 4),
+                                Text(toilet['distance'] ?? 'Unknown'),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

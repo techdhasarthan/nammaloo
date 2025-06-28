@@ -273,16 +273,40 @@ class ToiletDetailPage extends StatelessWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () async {
-                            final phone = toilet['phone'];
-                            final uri = Uri.parse('tel:$phone');
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Could not launch phone dialer',
+                            try {
+                              final phone =
+                                  toilet['phone'] ??
+                                  toilet['contact_information'];
+                              if (phone == null || phone.toString().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Phone number not available'),
+                                    backgroundColor: Colors.orange,
                                   ),
+                                );
+                                return;
+                              }
+
+                              String cleanPhone = phone.toString().replaceAll(
+                                RegExp(r'\s+'),
+                                '',
+                              );
+                              if (!cleanPhone.startsWith('+') &&
+                                  !cleanPhone.startsWith('0')) {
+                                cleanPhone = '+$cleanPhone';
+                              }
+
+                              await _launchPhoneDialer(cleanPhone);
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    e.toString().replaceFirst(
+                                      'Exception: ',
+                                      '',
+                                    ), // clean up error text
+                                  ),
+                                  backgroundColor: Colors.red,
                                 ),
                               );
                             }
@@ -331,6 +355,80 @@ class ToiletDetailPage extends StatelessWidget {
                           ),
                         )
                         .toList(),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Location Details
+                  const Text(
+                    "Location Details",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey[200]!, width: 1),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          _buildInfoRow(
+                            'Division',
+                            toilet['division'] ?? 'Not Available',
+                          ),
+                          _buildInfoRow(
+                            'Zone',
+                            toilet['zone'] ?? 'Not Available',
+                          ),
+                          _buildInfoRow(
+                            'Landmark',
+                            toilet['landmark'] ?? 'Not Available',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Operational Information
+                  const Text(
+                    "Operational Information",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey[200]!, width: 1),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          _buildInfoRow(
+                            'Operational Hours',
+                            toilet['operational_hours'] ?? 'Not Available',
+                          ),
+                          _buildInfoRow(
+                            'Cleanliness Status',
+                            toilet['cleanliness_status'] ?? 'Not Available',
+                          ),
+                          _buildInfoRow(
+                            'Maintenance Schedule',
+                            toilet['maintenance_schedule'] ?? 'Not Available',
+                          ),
+                          _buildInfoRow(
+                            'Contact Information',
+                            toilet['contact_information'] ?? 'Not Available',
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 32),
@@ -419,16 +517,20 @@ class ToiletDetailPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       side: BorderSide(color: Colors.grey[200]!, width: 1),
                     ),
-                    child: const ListTile(
-                      leading: Icon(
+                    child: ListTile(
+                      leading: const Icon(
                         Icons.access_time,
                         color: AppColors.navyBlue,
                       ),
                       title: Text(
-                        "Open 24 Hours",
-                        style: TextStyle(fontWeight: FontWeight.w500),
+                        toilet['operational_hours'] ?? "Open 24 Hours",
+                        style: const TextStyle(fontWeight: FontWeight.w500),
                       ),
-                      subtitle: Text("Available all day, every day"),
+                      subtitle: Text(
+                        toilet['operational_hours'] != null
+                            ? "Check operational hours above"
+                            : "Available all day, every day",
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -455,5 +557,43 @@ class ToiletDetailPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w400, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchPhoneDialer(String phoneNumber) async {
+    final uri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch phone dialer';
+    }
   }
 }
